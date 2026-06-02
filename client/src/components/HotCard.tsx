@@ -27,9 +27,19 @@ function HotCard({ platform, sourceName, listName, items, updatedAt, loading, er
     return `更新于 ${days} 天前`
   }
 
+  const getMaxHeat = () => {
+    if (!items || items.length === 0) return 1
+    return Math.max(...items.map(item => item.heat || 0))
+  }
+
+  const getHeatPercent = (heat: number) => {
+    const max = getMaxHeat()
+    return Math.min((heat / max) * 100, 100)
+  }
+
   const renderLoading = () => (
-    <div className="hot-card loading-card">
-      <div className="card-header">
+    <div className={`hot-card loading-card ${platform}`}>
+      <div className={`card-header ${platform}`}>
         <span className="icon">{PLATFORM_ICONS[platform]}</span>
         <div className="header-titles">
           <h2 className="source-name">{sourceName}</h2>
@@ -48,8 +58,8 @@ function HotCard({ platform, sourceName, listName, items, updatedAt, loading, er
   )
 
   const renderError = () => (
-    <div className="hot-card error-card">
-      <div className="card-header">
+    <div className={`hot-card error-card ${platform}`}>
+      <div className={`card-header ${platform}`}>
         <span className="icon">{PLATFORM_ICONS[platform]}</span>
         <div className="header-titles">
           <h2 className="source-name">{sourceName}</h2>
@@ -69,8 +79,8 @@ function HotCard({ platform, sourceName, listName, items, updatedAt, loading, er
   )
 
   const renderEmpty = () => (
-    <div className="hot-card empty-card">
-      <div className="card-header">
+    <div className={`hot-card empty-card ${platform}`}>
+      <div className={`card-header ${platform}`}>
         <span className="icon">{PLATFORM_ICONS[platform]}</span>
         <div className="header-titles">
           <h2 className="source-name">{sourceName}</h2>
@@ -85,8 +95,8 @@ function HotCard({ platform, sourceName, listName, items, updatedAt, loading, er
   )
 
   const renderSuccess = () => (
-    <div className="hot-card">
-      <div className="card-header">
+    <div className={`hot-card ${platform}`}>
+      <div className={`card-header ${platform}`}>
         <span className="icon">{PLATFORM_ICONS[platform]}</span>
         <div className="header-titles">
           <h2 className="source-name">{sourceName}</h2>
@@ -109,7 +119,16 @@ function HotCard({ platform, sourceName, listName, items, updatedAt, loading, er
                 {item.title}
               </a>
               {item.heat !== undefined && (
-                <span className="heat">{formatHeat(item.heat)}</span>
+                <div className="heat-container">
+                  <span className="heat-icon">🔥</span>
+                  <span className="heat">{formatHeat(item.heat)}</span>
+                  <div className="heat-bar">
+                    <div 
+                      className="heat-fill" 
+                      style={{ width: `${getHeatPercent(item.heat)}%` }}
+                    ></div>
+                  </div>
+                </div>
               )}
             </li>
           )
