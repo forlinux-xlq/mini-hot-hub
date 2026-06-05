@@ -174,7 +174,7 @@ function parseBaiduHtml(html) {
         heat: item.heat || (10 - index) * 100000,
         url: item.url,
         platform: 'baidu',
-        isTop: index === 0,
+        isTop: false,
         isNew: false,
         label: '百度热榜'
       }));
