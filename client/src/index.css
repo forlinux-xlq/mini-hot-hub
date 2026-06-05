@@ -342,6 +342,18 @@ body {
   background: linear-gradient(135deg, rgba(251, 114, 153, 0.08) 0%, rgba(251, 114, 153, 0.02) 100%);
 }
 
+.card-header.baidu {
+  background: linear-gradient(135deg, rgba(52, 131, 235, 0.08) 0%, rgba(52, 131, 235, 0.02) 100%);
+}
+
+.card-header.github {
+  background: linear-gradient(135deg, rgba(36, 41, 46, 0.08) 0%, rgba(36, 41, 46, 0.02) 100%);
+}
+
+.card-header.huggingface {
+  background: linear-gradient(135deg, rgba(102, 16, 242, 0.08) 0%, rgba(102, 16, 242, 0.02) 100%);
+}
+
 .icon {
   font-size: 28px;
   display: flex;
@@ -378,6 +390,18 @@ body {
   color: #fb7299;
 }
 
+.card-header.baidu .source-name {
+  color: #3483eb;
+}
+
+.card-header.github .source-name {
+  color: #24292e;
+}
+
+.card-header.huggingface .source-name {
+  color: #6610f2;
+}
+
 .list-name {
   font-size: 12px;
   color: #999;
@@ -402,6 +426,28 @@ body {
 
 .hot-item:hover {
   background-color: #fafbfc;
+}
+
+.rank-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.flame-icon {
+  font-size: 12px;
+  position: absolute;
+  margin-left: -8px;
+  margin-top: -4px;
+}
+
+.rank-container.top-1,
+.rank-container.top-2,
+.rank-container.top-3 {
+  position: relative;
 }
 
 .rank {
@@ -456,6 +502,42 @@ body {
   background: linear-gradient(135deg, #ffa0ba 0%, #ff8fab 100%);
 }
 
+.hot-card.baidu .rank.top-1 {
+  background: linear-gradient(135deg, #3483eb 0%, #2563eb 100%);
+}
+
+.hot-card.baidu .rank.top-2 {
+  background: linear-gradient(135deg, #60a5fa 0%, #3483eb 100%);
+}
+
+.hot-card.baidu .rank.top-3 {
+  background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+}
+
+.hot-card.github .rank.top-1 {
+  background: linear-gradient(135deg, #24292e 0%, #1f2428 100%);
+}
+
+.hot-card.github .rank.top-2 {
+  background: linear-gradient(135deg, #3d444d 0%, #24292e 100%);
+}
+
+.hot-card.github .rank.top-3 {
+  background: linear-gradient(135deg, #57606a 0%, #3d444d 100%);
+}
+
+.hot-card.huggingface .rank.top-1 {
+  background: linear-gradient(135deg, #6610f2 0%, #551a8b 100%);
+}
+
+.hot-card.huggingface .rank.top-2 {
+  background: linear-gradient(135deg, #7c3aed 0%, #6610f2 100%);
+}
+
+.hot-card.huggingface .rank.top-3 {
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+}
+
 .rank.top-1,
 .rank.top-2,
 .rank.top-3 {
@@ -473,8 +555,15 @@ body {
   font-size: 17px;
 }
 
-.hot-link {
+.content-area {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.hot-link {
   font-size: 14px;
   font-weight: 500;
   color: #1a1a1a;
@@ -500,6 +589,18 @@ body {
 
 .hot-card.bilibili .hot-item:hover .hot-link {
   color: #fb7299;
+}
+
+.hot-card.baidu .hot-item:hover .hot-link {
+  color: #3483eb;
+}
+
+.hot-card.github .hot-item:hover .hot-link {
+  color: #24292e;
+}
+
+.hot-card.huggingface .hot-item:hover .hot-link {
+  color: #6610f2;
 }
 
 .hot-item.top-item .hot-link {
@@ -541,6 +642,40 @@ body {
   color: #fb7299;
 }
 
+.hot-card.baidu .heat {
+  color: #3483eb;
+}
+
+.hot-card.github .heat {
+  color: #24292e;
+}
+
+.hot-card.huggingface .heat {
+  color: #6610f2;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.label.new {
+  background-color: #ff4d4f;
+  color: #fff;
+}
+
+.label.hot {
+  background-color: #ff8200;
+  color: #fff;
+}
+
 .heat-bar {
   width: 40px;
   height: 4px;
@@ -566,6 +701,18 @@ body {
 
 .hot-card.bilibili .heat-fill {
   background: linear-gradient(90deg, #fb7299, #f85a8a);
+}
+
+.hot-card.baidu .heat-fill {
+  background: linear-gradient(90deg, #3483eb, #2563eb);
+}
+
+.hot-card.github .heat-fill {
+  background: linear-gradient(90deg, #24292e, #1f2428);
+}
+
+.hot-card.huggingface .heat-fill {
+  background: linear-gradient(90deg, #6610f2, #551a8b);
 }
 
 .card-footer {

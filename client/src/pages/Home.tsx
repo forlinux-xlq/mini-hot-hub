@@ -11,7 +11,10 @@ interface PlatformConfig {
 const PLATFORM_CONFIGS: Record<HotPlatform, PlatformConfig> = {
   weibo: { sourceName: '微博', listName: '热搜榜' },
   zhihu: { sourceName: '知乎', listName: '热榜' },
-  bilibili: { sourceName: 'B站', listName: '热门榜' }
+  bilibili: { sourceName: 'B站', listName: '热门榜' },
+  baidu: { sourceName: '百度', listName: '热搜榜' },
+  github: { sourceName: 'GitHub', listName: 'Trending' },
+  huggingface: { sourceName: 'Hugging Face', listName: '热门模型' }
 }
 
 function Home() {

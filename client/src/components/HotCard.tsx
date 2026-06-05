@@ -3,7 +3,10 @@ import type { HotCardProps as HotCardPropsType } from '../types/hot'
 const PLATFORM_ICONS: Record<string, string> = {
   weibo: '🔥',
   zhihu: '💡',
-  bilibili: '📺'
+  bilibili: '📺',
+  baidu: '🔍',
+  github: '💻',
+  huggingface: '🤗'
 }
 
 function HotCard({ platform, sourceName, listName, items, updatedAt, loading, error, onRetry }: HotCardPropsType) {
@@ -25,16 +28,6 @@ function HotCard({ platform, sourceName, listName, items, updatedAt, loading, er
     if (hours < 24) return `更新于 ${hours} 小时前`
     const days = Math.floor(hours / 24)
     return `更新于 ${days} 天前`
-  }
-
-  const getMaxHeat = () => {
-    if (!items || items.length === 0) return 1
-    return Math.max(...items.map(item => item.heat || 0))
-  }
-
-  const getHeatPercent = (heat: number) => {
-    const max = getMaxHeat()
-    return Math.min((heat / max) * 100, 100)
   }
 
   const renderLoading = () => (
@@ -94,53 +87,75 @@ function HotCard({ platform, sourceName, listName, items, updatedAt, loading, er
     </div>
   )
 
-  const renderSuccess = () => (
-    <div className={`hot-card ${platform}`}>
-      <div className={`card-header ${platform}`}>
-        <span className="icon">{PLATFORM_ICONS[platform]}</span>
-        <div className="header-titles">
-          <h2 className="source-name">{sourceName}</h2>
-          <p className="list-name">{listName}</p>
+  const renderSuccess = () => {
+    const topItems = items?.filter(item => item.isTop) || []
+    const normalItems = items?.filter(item => !item.isTop) || []
+
+    return (
+      <div className={`hot-card ${platform}`}>
+        <div className={`card-header ${platform}`}>
+          <span className="icon">{PLATFORM_ICONS[platform]}</span>
+          <div className="header-titles">
+            <h2 className="source-name">{sourceName}</h2>
+            <p className="list-name">{listName}</p>
+          </div>
         </div>
-      </div>
-      <ul className="hot-list">
-        {items?.map((item) => {
-          const isTop = item.rank <= 3
-          const isTop1 = item.rank === 1
-          return (
-            <li 
-              key={item.rank} 
-              className={`hot-item ${isTop ? 'top-item' : ''} ${isTop1 ? 'top-1-item' : ''}`}
-            >
-              <span className={`rank ${isTop ? `top-${item.rank}` : ''}`}>
-                {item.rank}
+        <ul className="hot-list">
+          {topItems.map((item, index) => (
+            <li key={`top-${index}`} className="hot-item top-item">
+              <span className="rank top-tag">
+                <span className="tag-icon">📌</span>
+                <span className="tag-text">{item.label || '置顶'}</span>
               </span>
-              <a href={item.url} target="_blank" rel="noopener noreferrer" className="hot-link">
+              <a href={item.url} target="_blank" rel="noopener noreferrer" className="hot-link top-link">
                 {item.title}
               </a>
               {item.heat !== undefined && (
-                <div className="heat-container">
-                  <span className="heat-icon">🔥</span>
-                  <span className="heat">{formatHeat(item.heat)}</span>
-                  <div className="heat-bar">
-                    <div 
-                      className="heat-fill" 
-                      style={{ width: `${getHeatPercent(item.heat)}%` }}
-                    ></div>
-                  </div>
-                </div>
+                <span className="heat top-heat">{formatHeat(item.heat)}</span>
               )}
             </li>
-          )
-        })}
-      </ul>
-      {updatedAt && (
-        <div className="card-footer">
-          <span className="updated-at">{formatUpdatedAt(updatedAt)}</span>
-        </div>
-      )}
-    </div>
-  )
+          ))}
+          {normalItems.map((item) => {
+            const isTopRank = item.rank <= 3
+            return (
+              <li 
+                key={item.rank} 
+                className={`hot-item ${isTopRank ? 'top-rank-item' : ''}`}
+              >
+                <span className={`rank-container ${isTopRank ? `top-${item.rank}` : ''}`}>
+                  {isTopRank && (
+                    <span className="flame-icon">🔥</span>
+                  )}
+                  <span className={`rank ${isTopRank ? `top-${item.rank}` : ''}`}>
+                    {item.rank}
+                  </span>
+                </span>
+                <div className="content-area">
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="hot-link">
+                    {item.title}
+                  </a>
+                  {item.isNew && (
+                    <span className="label new">新</span>
+                  )}
+                  {item.label && !item.isNew && (
+                    <span className="label hot">{item.label}</span>
+                  )}
+                </div>
+                {item.heat !== undefined && item.heat > 0 && (
+                  <span className="heat">{formatHeat(item.heat)}</span>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+        {updatedAt && (
+          <div className="card-footer">
+            <span className="updated-at">{formatUpdatedAt(updatedAt)}</span>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   if (loading) return renderLoading()
   if (error) return renderError()

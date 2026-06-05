@@ -1,16 +1,27 @@
 import type { HotPlatform, HotItem } from '../types/hot'
 
-interface ApiResponse<T> {
-  code: number
+interface ApiResponse {
+  error: boolean
+  items: HotItem[]
   message: string
-  data: T
   updatedAt?: string
 }
 
 interface PlatformData {
   source: HotPlatform
-  data: HotItem[]
+  error: boolean
+  items: HotItem[]
+  message: string
   updatedAt: string
+}
+
+interface AggregatedResponse {
+  code: number
+  message: string
+  data: {
+    platforms: PlatformData[]
+  }
+  updatedAt?: string
 }
 
 const BASE_URL = import.meta.env.VITE_API_BASE || ''
@@ -18,19 +29,19 @@ const BASE_URL = import.meta.env.VITE_API_BASE || ''
 async function fetchHotPlatform(source: HotPlatform): Promise<HotItem[]> {
   const url = `${BASE_URL}/api/hot/${source}`
   const response = await fetch(url)
-  const result: ApiResponse<HotItem[]> = await response.json()
+  const result: ApiResponse = await response.json()
 
-  if (result.code !== 0) {
+  if (result.error) {
     throw new Error(result.message || 'Failed to fetch hot data')
   }
 
-  return result.data
+  return result.items
 }
 
 async function fetchAllHot(): Promise<Record<HotPlatform, HotItem[]>> {
   const url = `${BASE_URL}/api/hot`
   const response = await fetch(url)
-  const result: ApiResponse<{ platforms: PlatformData[] }> = await response.json()
+  const result: AggregatedResponse = await response.json()
 
   if (result.code !== 0) {
     throw new Error(result.message || 'Failed to fetch all hot data')
@@ -38,7 +49,7 @@ async function fetchAllHot(): Promise<Record<HotPlatform, HotItem[]>> {
 
   const aggregated: Record<HotPlatform, HotItem[]> = {} as Record<HotPlatform, HotItem[]>
   result.data.platforms.forEach(platformData => {
-    aggregated[platformData.source] = platformData.data
+    aggregated[platformData.source] = platformData.items || []
   })
 
   return aggregated
