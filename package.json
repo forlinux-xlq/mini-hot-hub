@@ -3,12 +3,11 @@
   "version": "1.0.0",
   "description": "多平台热搜聚合网站",
   "scripts": {
+    "postinstall": "cd client && npm install && cd ../server && npm install",
     "dev:client": "cd client && npm run dev",
     "dev:server": "cd server && npm run dev",
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
-    "build:client": "cd client && npm run build",
-    "build:server": "cd server && npm run build",
-    "build": "npm run build:client && npm run build:server",
+    "build": "cd client && npm run build",
     "start": "cd server && npm start"
   },
   "keywords": ["hot", "trending", "聚合"],
