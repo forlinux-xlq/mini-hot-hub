@@ -24,7 +24,7 @@
 
 ### 环境要求
 
-- Node.js >= 16.x
+- Node.js >= 18.x
 - npm >= 8.x
 
 ### 安装依赖
@@ -124,39 +124,46 @@ server: {
 - Fork 项目到 GitHub
 - 在 Vercel 中导入项目
 - 设置根目录为 `client`
-- 设置环境变量 `VITE_API_BASE` 指向后端地址（例如 `https://your-backend.railway.app`）
+- 配置环境变量：
+  - `VITE_API_BASE` = 你的 Railway 后端地址（例如 `https://your-backend.railway.app`）
 - 部署
 
 **后端（Railway）**：
 - Fork 项目到 GitHub
 - 在 Railway 中导入项目
-- 项目会自动识别根目录的 `package.json`
 - 配置以下设置：
-  - **Root Directory**: `server`（在 Railway 项目设置中）
-  - **Build Command**: `cd server && npm install`
-  - **Start Command**: `cd server && npm start`
-- 设置环境变量 `PORT`（Railway 会自动分配）
-- 部署
+  - **Root Directory**: `server`
+  - **Build Command**: `npm install`
+  - **Start Command**: `npm start`
+- 配置环境变量（可选）：
+  - `CACHE_TTL_SECONDS` = 600
+- 部署后复制 Railway 提供的域名
 
-#### 方式二：Railway 一键部署（后端）
+#### 方式二：使用配置文件部署（更简单）
 
-**Railway 部署步骤（后端）**：
+**项目已包含配置文件**：
+- `vercel.json` - Vercel 部署配置
+- `railway.json` - Railway 部署配置
 
-1. 在项目根目录创建 `package.json`（已完成）
-2. 在 Railway 中导入 GitHub 仓库
-3. 在项目设置中配置：
-   - **Root Directory**: `server`
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-4. 配置环境变量：
-   - `PORT`：Railway 会自动设置
-   - `CACHE_TTL_SECONDS`：缓存时间（推荐 600）
-5. 部署完成后，复制 Railway 提供的域名
+**前端（Vercel）**：
+1. Fork 项目到 GitHub
+2. 在 Vercel 中导入项目
+3. 在 Vercel 项目设置中：
+   - **Root Directory**: `client`
+   - **Output Directory**: `dist`
+   - 配置环境变量 `VITE_API_BASE` = 你的 Railway 后端地址
+4. 更新 `vercel.json` 中的 `destination` 为你的实际后端地址
+5. 部署
 
-**前端配置**：
-- 修改 `client/vite.config.ts` 或环境变量 `VITE_API_BASE`
-- 将其指向 Railway 后端的域名
-- 部署到 Vercel/Netlify
+**后端（Railway）**：
+1. Fork 项目到 GitHub
+2. 在 Railway 中导入项目
+3. Railway 会自动使用 `railway.json` 配置
+4. 部署完成后复制 Railway 提供的域名
+
+**重要提醒**：
+- 先部署后端，获取后端地址后再部署前端
+- 记得在 `vercel.json` 和 `client/.env` 中更新后端地址
 
 #### 环境变量配置
 
@@ -184,6 +191,8 @@ mini-hot-hub/
 ├── server/              # 后端代码
 │   └── src/
 │       └── index.js     # Express 服务入口
+├── vercel.json          # Vercel 部署配置
+├── railway.json         # Railway 部署配置
 └── README.md
 ```
 
