@@ -12,7 +12,8 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://mini-hot-hub-api-v2-267428-10-1325849577.sh.run.tcloudbase.com/api/$1"
+      "dest": "https://mini-hot-hub-api-v2-267428-10-1325849577.sh.run.tcloudbase.com/api/$1",
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     }
   ]
 }
