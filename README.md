@@ -24,24 +24,32 @@
 
 ### 环境要求
 
-- Node.js >= 18.x
-- npm >= 9.x
+- Node.js >= 16.x
+- npm >= 8.x
 
 ### 安装依赖
 
 ```bash
-# 安装前端依赖
-cd client
+# 在项目根目录安装
 npm install
 
-# 安装后端依赖
-cd ../server
-npm install
+# 分别安装前后端依赖
+cd client && npm install
+cd ../server && npm install
 ```
 
 ### 启动开发服务器
 
-**方式一：使用终端分别启动**
+**方式一：使用根目录脚本（推荐）**
+
+```bash
+# 在项目根目录
+npm run dev          # 同时启动前后端
+npm run dev:server   # 仅启动后端
+npm run dev:client   # 仅启动前端
+```
+
+**方式二：使用终端分别启动**
 
 ```bash
 # 终端 1 - 启动后端 (端口 3001)
@@ -51,16 +59,6 @@ npm run dev
 # 终端 2 - 启动前端 (端口 5173)
 cd client
 npm run dev
-```
-
-**方式二：使用 concurrently（推荐）**
-
-```bash
-# 在项目根目录安装 concurrently
-npm install -g concurrently
-
-# 同时启动前后端
-concurrently "cd server && npm run dev" "cd client && npm run dev"
 ```
 
 ### 访问地址
@@ -120,13 +118,56 @@ server: {
 
 ### 生产环境部署
 
-**前端（Vercel）**：
-- 设置环境变量 `VITE_API_BASE` 指向后端地址
-- 使用 `npm run build` 构建
+#### 方式一：分别部署（推荐）
 
-**后端（Railway/Heroku）**：
-- 设置环境变量 `PORT`
-- 确保 CORS 配置允许前端域名
+**前端（Vercel）**：
+- Fork 项目到 GitHub
+- 在 Vercel 中导入项目
+- 设置根目录为 `client`
+- 设置环境变量 `VITE_API_BASE` 指向后端地址（例如 `https://your-backend.railway.app`）
+- 部署
+
+**后端（Railway）**：
+- Fork 项目到 GitHub
+- 在 Railway 中导入项目
+- 项目会自动识别根目录的 `package.json`
+- 配置以下设置：
+  - **Root Directory**: `server`（在 Railway 项目设置中）
+  - **Build Command**: `cd server && npm install`
+  - **Start Command**: `cd server && npm start`
+- 设置环境变量 `PORT`（Railway 会自动分配）
+- 部署
+
+#### 方式二：Railway 一键部署（后端）
+
+**Railway 部署步骤（后端）**：
+
+1. 在项目根目录创建 `package.json`（已完成）
+2. 在 Railway 中导入 GitHub 仓库
+3. 在项目设置中配置：
+   - **Root Directory**: `server`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+4. 配置环境变量：
+   - `PORT`：Railway 会自动设置
+   - `CACHE_TTL_SECONDS`：缓存时间（推荐 600）
+5. 部署完成后，复制 Railway 提供的域名
+
+**前端配置**：
+- 修改 `client/vite.config.ts` 或环境变量 `VITE_API_BASE`
+- 将其指向 Railway 后端的域名
+- 部署到 Vercel/Netlify
+
+#### 环境变量配置
+
+**后端环境变量**：
+- `PORT`: 服务端口（默认 3001）
+- `NODE_ENV`: `production` 或 `development`
+- `CACHE_TTL_SECONDS`: 缓存时间（单位秒，默认 600）
+
+**前端环境变量**：
+- `VITE_API_BASE`: 后端 API 地址（生产环境）
+- `VITE_ENABLE_MOCK`: 是否启用 Mock（开发环境）
 
 ## 项目结构
 
