@@ -2,14 +2,20 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY server/package*.json ./server/
-RUN cd server && npm install --production
+COPY server/package.json ./server/package.json
+COPY server/package-lock.json ./server/package-lock.json
 
-COPY server/ ./server/
+RUN cd server && npm ci --only=production
+
+COPY server/src ./server/src
+COPY server/services ./server/services
+COPY server/utils ./server/utils
 
 COPY index.js .
 COPY package.json .
 
 EXPOSE 3001
+
+ENV NODE_ENV=production
 
 CMD ["node", "index.js"]
