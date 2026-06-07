@@ -12,7 +12,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://your-backend.railway.app/api/$1"
+      "dest": "请替换为你的腾讯云后端地址/api/$1"
     }
   ]
 }
