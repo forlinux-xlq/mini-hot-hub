@@ -14,8 +14,9 @@ COPY server/utils ./server/utils
 COPY index.js .
 COPY package.json .
 
-EXPOSE 3001
+EXPOSE 80
 
 ENV NODE_ENV=production
+ENV PORT=80
 
 CMD ["node", "index.js"]
