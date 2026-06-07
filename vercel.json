@@ -12,7 +12,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "请替换为你的腾讯云后端地址/api/$1"
+      "dest": "https://mini-hot-hub-d3g6bkazk6bc7ab9f-1325849577.tcloudbaseapp.com/api/$1"
     }
   ]
 }
