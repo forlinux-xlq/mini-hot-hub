@@ -186,7 +186,6 @@ function parseZhihuApi(data) {
     }
 
     // 提取链接
-    let url = '';
     
     // 优先使用已有的完整链接
     if (item.url && item.url.startsWith('https://') && !item.url.startsWith('https://api.zhihu.com')) {
@@ -199,24 +198,24 @@ function parseZhihuApi(data) {
     if (!url) {
       let foundId = null;
       
-      // 检查 item.question_id
-      if (item.question_id && String(item.question_id).match(/^\d+$/)) {
+      // 检查 item.question_id (知乎问题ID通常是8-10位数字)
+      if (item.question_id && String(item.question_id).match(/^\d{8,10}$/)) {
         foundId = item.question_id;
       } 
       // 检查 target.question.id
-      else if (target.question && target.question.id && String(target.question.id).match(/^\d+$/)) {
+      else if (target.question && target.question.id && String(target.question.id).match(/^\d{8,10}$/)) {
         foundId = target.question.id;
       }
       // 检查 item.target.id
-      else if (item.target && item.target.id && String(item.target.id).match(/^\d+$/)) {
+      else if (item.target && item.target.id && String(item.target.id).match(/^\d{8,10}$/)) {
         foundId = item.target.id;
       }
       // 检查 target.id (只有当类型是问题时)
-      else if (target.id && String(target.id).match(/^\d+$/) && (target.type === 'question' || !target.type)) {
+      else if (target.id && String(target.id).match(/^\d{8,10}$/) && (target.type === 'question' || !target.type)) {
         foundId = target.id;
       }
       // 检查 item.id
-      else if (item.id && String(item.id).match(/^\d+$/)) {
+      else if (item.id && String(item.id).match(/^\d{8,10}$/)) {
         foundId = item.id;
       }
 
@@ -295,15 +294,15 @@ function parseZhihuHtml(html) {
       if (!url) {
         let foundId = null;
         
-        if (item.question_id && String(item.question_id).match(/^\d+$/)) {
+        if (item.question_id && String(item.question_id).match(/^\d{8,10}$/)) {
           foundId = item.question_id;
-        } else if (target.question && target.question.id && String(target.question.id).match(/^\d+$/)) {
+        } else if (target.question && target.question.id && String(target.question.id).match(/^\d{8,10}$/)) {
           foundId = target.question.id;
-        } else if (item.target && item.target.id && String(item.target.id).match(/^\d+$/)) {
+        } else if (item.target && item.target.id && String(item.target.id).match(/^\d{8,10}$/)) {
           foundId = item.target.id;
-        } else if (target.id && String(target.id).match(/^\d+$/) && (target.type === 'question' || !target.type)) {
+        } else if (target.id && String(target.id).match(/^\d{8,10}$/) && (target.type === 'question' || !target.type)) {
           foundId = target.id;
-        } else if (item.id && String(item.id).match(/^\d+$/)) {
+        } else if (item.id && String(item.id).match(/^\d{8,10}$/)) {
           foundId = item.id;
         }
 
@@ -373,9 +372,9 @@ function parseThirdParty(data) {
     if (!url) {
       let foundId = null;
       
-      if (item.question_id && String(item.question_id).match(/^\d+$/)) {
+      if (item.question_id && String(item.question_id).match(/^\d{8,10}$/)) {
         foundId = item.question_id;
-      } else if (item.id && String(item.id).match(/^\d+$/)) {
+      } else if (item.id && String(item.id).match(/^\d{8,10}$/)) {
         foundId = item.id;
       }
 
