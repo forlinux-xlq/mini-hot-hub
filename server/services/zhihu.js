@@ -242,9 +242,14 @@ function parseZhihuApi(data) {
       }
     }
     
-    // 最后兜底：直接跳转到知乎热榜页面
+    // 最后兜底：使用搜索链接，这样用户可以通过搜索找到相关内容
     if (!url) {
-      url = 'https://www.zhihu.com/hot';
+      if (title) {
+        const encodedTitle = encodeURIComponent(title);
+        url = `https://www.zhihu.com/search?type=content&q=${encodedTitle}`;
+      } else {
+        url = 'https://www.zhihu.com/hot';
+      }
     }
 
     return {
@@ -319,9 +324,15 @@ function parseZhihuHtml(html) {
         }
       }
       
-      // 最后兜底：直接跳转到知乎热榜页面
+      // 最后兜底：使用搜索链接，这样用户可以通过搜索找到相关内容
       if (!url) {
-        url = 'https://www.zhihu.com/hot';
+        const title = target.title || item.title || '';
+        if (title) {
+          const encodedTitle = encodeURIComponent(title);
+          url = `https://www.zhihu.com/search?type=content&q=${encodedTitle}`;
+        } else {
+          url = 'https://www.zhihu.com/hot';
+        }
       }
 
       return {
@@ -391,9 +402,14 @@ function parseThirdParty(data) {
       }
     }
     
-    // 最后兜底：直接跳转到知乎热榜页面
+    // 最后兜底：使用搜索链接，这样用户可以通过搜索找到相关内容
     if (!url) {
-      url = 'https://www.zhihu.com/hot';
+      if (title) {
+        const encodedTitle = encodeURIComponent(title);
+        url = `https://www.zhihu.com/search?type=content&q=${encodedTitle}`;
+      } else {
+        url = 'https://www.zhihu.com/hot';
+      }
     }
 
     return {
