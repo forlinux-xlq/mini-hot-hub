@@ -187,10 +187,16 @@ function parseZhihuApi(data) {
 
     // 提取链接
     
-    // 优先使用已有的完整链接
-    if (item.url && item.url.startsWith('https://') && !item.url.startsWith('https://api.zhihu.com')) {
+    // 优先使用已有的完整链接，但排除搜索链接（搜索链接可能会跳转到空页面）
+    const isValidUrl = (link) => {
+      return link.startsWith('https://') && 
+             !link.startsWith('https://api.zhihu.com') && 
+             !link.includes('/search?');
+    };
+    
+    if (item.url && isValidUrl(item.url)) {
       url = item.url;
-    } else if (target.url && target.url.startsWith('https://') && !target.url.startsWith('https://api.zhihu.com')) {
+    } else if (target.url && isValidUrl(target.url)) {
       url = target.url;
     }
     
@@ -242,14 +248,9 @@ function parseZhihuApi(data) {
       }
     }
     
-    // 最后兜底：使用搜索链接，这样用户可以通过搜索找到相关内容
+    // 最后兜底：直接跳转到知乎热榜首页，避免搜索链接问题
     if (!url) {
-      if (title) {
-        const encodedTitle = encodeURIComponent(title);
-        url = `https://www.zhihu.com/search?type=content&q=${encodedTitle}`;
-      } else {
-        url = 'https://www.zhihu.com/hot';
-      }
+      url = 'https://www.zhihu.com/hot';
     }
 
     return {
@@ -288,10 +289,16 @@ function parseZhihuHtml(html) {
       const target = item.target || item;
       let url = '';
       
-      // 优先使用已有的完整链接
-      if (item.url && item.url.startsWith('https://') && !item.url.startsWith('https://api.zhihu.com')) {
+      // 优先使用已有的完整链接，但排除搜索链接
+      const isValidUrl = (link) => {
+        return link.startsWith('https://') && 
+               !link.startsWith('https://api.zhihu.com') && 
+               !link.includes('/search?');
+      };
+      
+      if (item.url && isValidUrl(item.url)) {
         url = item.url;
-      } else if (target.url && target.url.startsWith('https://') && !target.url.startsWith('https://api.zhihu.com')) {
+      } else if (target.url && isValidUrl(target.url)) {
         url = target.url;
       }
       
@@ -324,15 +331,9 @@ function parseZhihuHtml(html) {
         }
       }
       
-      // 最后兜底：使用搜索链接，这样用户可以通过搜索找到相关内容
+      // 最后兜底：直接跳转到知乎热榜首页，避免搜索链接问题
       if (!url) {
-        const title = target.title || item.title || '';
-        if (title) {
-          const encodedTitle = encodeURIComponent(title);
-          url = `https://www.zhihu.com/search?type=content&q=${encodedTitle}`;
-        } else {
-          url = 'https://www.zhihu.com/hot';
-        }
+        url = 'https://www.zhihu.com/hot';
       }
 
       return {
@@ -374,9 +375,24 @@ function parseThirdParty(data) {
     let url = '';
     let rank = item.rank || index + 1;
 
-    // 优先使用已有的完整链接
-    if (item.url && item.url.startsWith('https://') && !item.url.startsWith('https://api.zhihu.com')) {
+    // 优先使用已有的完整链接，但排除搜索链接
+    const isValidUrl = (link) => {
+      return link.startsWith('https://') && 
+             !link.startsWith('https://api.zhihu.com') && 
+             !link.includes('/search?');
+    };
+    
+    if (item.url && isValidUrl(item.url)) {
       url = item.url;
+    }
+    
+    // 尝试从 target 对象中提取链接
+    if (!url && item.target) {
+      if (item.target.url && isValidUrl(item.target.url)) {
+        url = item.target.url;
+      } else if (item.target.question && item.target.question.url && isValidUrl(item.target.question.url)) {
+        url = item.target.question.url;
+      }
     }
     
     // 如果没有现成链接，尝试提取问题ID构建链接
@@ -387,6 +403,8 @@ function parseThirdParty(data) {
         foundId = item.question_id;
       } else if (item.id && String(item.id).match(/^\d{8,10}$/)) {
         foundId = item.id;
+      } else if (item.target && item.target.question && item.target.question.id && String(item.target.question.id).match(/^\d{8,10}$/)) {
+        foundId = item.target.question.id;
       }
 
       if (foundId) {
@@ -402,14 +420,17 @@ function parseThirdParty(data) {
       }
     }
     
-    // 最后兜底：使用搜索链接，这样用户可以通过搜索找到相关内容
-    if (!url) {
-      if (title) {
-        const encodedTitle = encodeURIComponent(title);
-        url = `https://www.zhihu.com/search?type=content&q=${encodedTitle}`;
-      } else {
-        url = 'https://www.zhihu.com/hot';
+    // 尝试从 target 中获取文章链接
+    if (!url && item.target && item.target.article) {
+      let articleId = item.target.article.id;
+      if (articleId) {
+        url = `https://zhuanlan.zhihu.com/p/${articleId}`;
       }
+    }
+    
+    // 最后兜底：直接跳转到知乎热榜首页，避免搜索链接问题
+    if (!url) {
+      url = 'https://www.zhihu.com/hot';
     }
 
     return {
