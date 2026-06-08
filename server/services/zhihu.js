@@ -185,41 +185,64 @@ function parseZhihuApi(data) {
       title = item.name;
     }
 
-    // 提取链接 - 先尝试从各种可能的字段中提取问题ID
-    let foundId = null;
+    // 提取链接
+    let url = '';
     
-    // 检查 item.question_id
-    if (item.question_id && String(item.question_id).match(/^\d+$/)) {
-      foundId = item.question_id;
-    } 
-    // 检查 target.id (但排除可能不是问题ID的情况)
-    else if (target.id && String(target.id).match(/^\d+$/) && !target.type) {
-      foundId = target.id;
-    }
-    // 检查 target.question.id
-    else if (target.question && target.question.id && String(target.question.id).match(/^\d+$/)) {
-      foundId = target.question.id;
-    }
-    // 检查 item.target.id
-    else if (item.target && item.target.id && String(item.target.id).match(/^\d+$/)) {
-      foundId = item.target.id;
-    }
-    // 检查 item.id
-    else if (item.id && String(item.id).match(/^\d+$/)) {
-      foundId = item.id;
-    }
-
-    // 如果找到了有效的问题ID，直接构建链接
-    if (foundId) {
-      url = `https://www.zhihu.com/question/${foundId}`;
-    } 
-    // 如果有现成的有效链接，直接使用
-    else if (item.url && item.url.includes('/question/')) {
+    // 优先使用已有的完整链接
+    if (item.url && item.url.startsWith('https://') && !item.url.startsWith('https://api.zhihu.com')) {
       url = item.url;
-    } else if (target.url && target.url.includes('/question/')) {
+    } else if (target.url && target.url.startsWith('https://') && !target.url.startsWith('https://api.zhihu.com')) {
       url = target.url;
     }
+    
+    // 如果没有现成链接，尝试提取问题ID构建链接
+    if (!url) {
+      let foundId = null;
+      
+      // 检查 item.question_id
+      if (item.question_id && String(item.question_id).match(/^\d+$/)) {
+        foundId = item.question_id;
+      } 
+      // 检查 target.question.id
+      else if (target.question && target.question.id && String(target.question.id).match(/^\d+$/)) {
+        foundId = target.question.id;
+      }
+      // 检查 item.target.id
+      else if (item.target && item.target.id && String(item.target.id).match(/^\d+$/)) {
+        foundId = item.target.id;
+      }
+      // 检查 target.id (只有当类型是问题时)
+      else if (target.id && String(target.id).match(/^\d+$/) && (target.type === 'question' || !target.type)) {
+        foundId = target.id;
+      }
+      // 检查 item.id
+      else if (item.id && String(item.id).match(/^\d+$/)) {
+        foundId = item.id;
+      }
 
+      if (foundId) {
+        url = `https://www.zhihu.com/question/${foundId}`;
+      }
+    }
+    
+    // 检查是否是文章类型
+    if (!url && (target.type === 'article' || item.type === 'article')) {
+      let articleId = target.id || item.id;
+      if (articleId && String(articleId).match(/^[a-z0-9]+$/i)) {
+        url = `https://zhuanlan.zhihu.com/p/${articleId}`;
+      }
+    }
+    
+    // 检查是否是回答类型
+    if (!url && (target.type === 'answer' || item.type === 'answer')) {
+      let answerId = target.id || item.id;
+      if (answerId && String(answerId).match(/^\d+$/)) {
+        // 回答需要找到问题ID才能构建正确的URL
+        // 如果找不到问题ID，就跳转到热榜页面
+        url = 'https://www.zhihu.com/hot';
+      }
+    }
+    
     // 最后兜底：直接跳转到知乎热榜页面
     if (!url) {
       url = 'https://www.zhihu.com/hot';
@@ -261,27 +284,44 @@ function parseZhihuHtml(html) {
       const target = item.target || item;
       let url = '';
       
-      let foundId = null;
-      
-      if (item.question_id && String(item.question_id).match(/^\d+$/)) {
-        foundId = item.question_id;
-      } else if (target.question && target.question.id && String(target.question.id).match(/^\d+$/)) {
-        foundId = target.question.id;
-      } else if (target.id && String(target.id).match(/^\d+$/) && !target.type) {
-        foundId = target.id;
-      } else if (item.target && item.target.id && String(item.target.id).match(/^\d+$/)) {
-        foundId = item.target.id;
-      } else if (item.id && String(item.id).match(/^\d+$/)) {
-        foundId = item.id;
-      }
-
-      if (foundId) {
-        url = `https://www.zhihu.com/question/${foundId}`;
-      } else if (item.url && item.url.includes('/question/')) {
+      // 优先使用已有的完整链接
+      if (item.url && item.url.startsWith('https://') && !item.url.startsWith('https://api.zhihu.com')) {
         url = item.url;
-      } else if (target.url && target.url.includes('/question/')) {
+      } else if (target.url && target.url.startsWith('https://') && !target.url.startsWith('https://api.zhihu.com')) {
         url = target.url;
-      } else {
+      }
+      
+      // 如果没有现成链接，尝试提取问题ID构建链接
+      if (!url) {
+        let foundId = null;
+        
+        if (item.question_id && String(item.question_id).match(/^\d+$/)) {
+          foundId = item.question_id;
+        } else if (target.question && target.question.id && String(target.question.id).match(/^\d+$/)) {
+          foundId = target.question.id;
+        } else if (item.target && item.target.id && String(item.target.id).match(/^\d+$/)) {
+          foundId = item.target.id;
+        } else if (target.id && String(target.id).match(/^\d+$/) && (target.type === 'question' || !target.type)) {
+          foundId = target.id;
+        } else if (item.id && String(item.id).match(/^\d+$/)) {
+          foundId = item.id;
+        }
+
+        if (foundId) {
+          url = `https://www.zhihu.com/question/${foundId}`;
+        }
+      }
+      
+      // 检查是否是文章类型
+      if (!url && (target.type === 'article' || item.type === 'article')) {
+        let articleId = target.id || item.id;
+        if (articleId && String(articleId).match(/^[a-z0-9]+$/i)) {
+          url = `https://zhuanlan.zhihu.com/p/${articleId}`;
+        }
+      }
+      
+      // 最后兜底：直接跳转到知乎热榜页面
+      if (!url) {
         url = 'https://www.zhihu.com/hot';
       }
 
@@ -324,19 +364,36 @@ function parseThirdParty(data) {
     let url = '';
     let rank = item.rank || index + 1;
 
-    let foundId = null;
-    
-    if (item.question_id && String(item.question_id).match(/^\d+$/)) {
-      foundId = item.question_id;
-    } else if (item.id && String(item.id).match(/^\d+$/)) {
-      foundId = item.id;
-    }
-
-    if (foundId) {
-      url = `https://www.zhihu.com/question/${foundId}`;
-    } else if (item.url && item.url.includes('/question/')) {
+    // 优先使用已有的完整链接
+    if (item.url && item.url.startsWith('https://') && !item.url.startsWith('https://api.zhihu.com')) {
       url = item.url;
-    } else {
+    }
+    
+    // 如果没有现成链接，尝试提取问题ID构建链接
+    if (!url) {
+      let foundId = null;
+      
+      if (item.question_id && String(item.question_id).match(/^\d+$/)) {
+        foundId = item.question_id;
+      } else if (item.id && String(item.id).match(/^\d+$/)) {
+        foundId = item.id;
+      }
+
+      if (foundId) {
+        url = `https://www.zhihu.com/question/${foundId}`;
+      }
+    }
+    
+    // 检查是否是文章类型
+    if (!url && item.type === 'article') {
+      let articleId = item.id;
+      if (articleId && String(articleId).match(/^[a-z0-9]+$/i)) {
+        url = `https://zhuanlan.zhihu.com/p/${articleId}`;
+      }
+    }
+    
+    // 最后兜底：直接跳转到知乎热榜页面
+    if (!url) {
       url = 'https://www.zhihu.com/hot';
     }
 
