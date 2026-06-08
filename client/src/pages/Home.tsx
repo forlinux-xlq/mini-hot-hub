@@ -18,7 +18,7 @@ const PLATFORM_CONFIGS: Record<HotPlatform, PlatformConfig> = {
 }
 
 function Home() {
-  const { data, loading, error, lastUpdate, refresh } = useHotList()
+  const { data, loading, error, lastUpdate, refresh, timeUntilRefresh } = useHotList()
   const [currentTime, setCurrentTime] = useState(new Date())
 
   useEffect(() => {
@@ -80,9 +80,7 @@ function Home() {
           </div>
           <div className="auto-refresh">
             <span className="refresh-label">自动刷新：</span>
-            <div className="refresh-progress">
-              <div className="refresh-bar"></div>
-            </div>
+            <span className="refresh-countdown">{Math.ceil(timeUntilRefresh / 1000)}s</span>
           </div>
         </div>
       </div>
