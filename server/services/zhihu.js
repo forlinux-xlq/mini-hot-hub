@@ -195,7 +195,13 @@ function parseZhihuApi(data) {
       // 将API链接转换为网页链接
       if (link.startsWith('https://api.zhihu.com/questions/')) {
         const questionId = link.replace('https://api.zhihu.com/questions/', '');
-        return `https://www.zhihu.com/question/${questionId}`;
+        // 知乎问题ID通常是8-10位数字，超过15位的可能不是有效的问题ID
+        if (questionId.length >= 6 && questionId.length <= 15) {
+          return `https://www.zhihu.com/question/${questionId}`;
+        } else {
+          // 长ID使用搜索链接
+          return null;
+        }
       }
       // 排除其他API链接
       if (link.startsWith('https://api.zhihu.com')) return null;
@@ -266,7 +272,8 @@ function parseZhihuApi(data) {
     
     // 尝试从更多字段获取链接
     if (!url && item.target && item.target.url) {
-      url = item.target.url;
+      const processedUrl = processUrl(item.target.url);
+      if (processedUrl) url = processedUrl;
     }
     
     // 最后兜底：使用知乎问答搜索，这样用户可以找到相关问题
@@ -322,7 +329,11 @@ function parseZhihuHtml(html) {
         if (link.includes('/search?')) return null;
         if (link.startsWith('https://api.zhihu.com/questions/')) {
           const questionId = link.replace('https://api.zhihu.com/questions/', '');
-          return `https://www.zhihu.com/question/${questionId}`;
+          if (questionId.length >= 6 && questionId.length <= 15) {
+            return `https://www.zhihu.com/question/${questionId}`;
+          } else {
+            return null;
+          }
         }
         if (link.startsWith('https://api.zhihu.com')) return null;
         return link;
@@ -434,7 +445,11 @@ function parseThirdParty(data) {
       if (link.includes('/search?')) return null;
       if (link.startsWith('https://api.zhihu.com/questions/')) {
         const questionId = link.replace('https://api.zhihu.com/questions/', '');
-        return `https://www.zhihu.com/question/${questionId}`;
+        if (questionId.length >= 6 && questionId.length <= 15) {
+          return `https://www.zhihu.com/question/${questionId}`;
+        } else {
+          return null;
+        }
       }
       if (link.startsWith('https://api.zhihu.com')) return null;
       return link;
