@@ -173,31 +173,56 @@ function parseZhihuApi(data) {
 
     let title = '';
     let url = '';
-    let questionId = null;
-
+    
+    // 提取标题
     if (target.title) {
       title = target.title;
     } else if (target.question && target.question.title) {
       title = target.question.title;
-      questionId = target.question.id;
     } else if (item.title) {
       title = item.title;
     } else if (item.name) {
       title = item.name;
     }
 
+    // 提取链接 - 先尝试从各种可能的字段中提取问题ID
+    let foundId = null;
+    
+    // 检查 item.question_id
     if (item.question_id && String(item.question_id).match(/^\d+$/)) {
-      url = `https://www.zhihu.com/question/${item.question_id}`;
-    } else if (questionId && String(questionId).match(/^\d+$/)) {
-      url = `https://www.zhihu.com/question/${questionId}`;
-    } else if (target.question && target.question.id && String(target.question.id).match(/^\d+$/)) {
-      url = `https://www.zhihu.com/question/${target.question.id}`;
+      foundId = item.question_id;
+    } 
+    // 检查 target.id (但排除可能不是问题ID的情况)
+    else if (target.id && String(target.id).match(/^\d+$/) && !target.type) {
+      foundId = target.id;
+    }
+    // 检查 target.question.id
+    else if (target.question && target.question.id && String(target.question.id).match(/^\d+$/)) {
+      foundId = target.question.id;
+    }
+    // 检查 item.target.id
+    else if (item.target && item.target.id && String(item.target.id).match(/^\d+$/)) {
+      foundId = item.target.id;
+    }
+    // 检查 item.id
+    else if (item.id && String(item.id).match(/^\d+$/)) {
+      foundId = item.id;
+    }
+
+    // 如果找到了有效的问题ID，直接构建链接
+    if (foundId) {
+      url = `https://www.zhihu.com/question/${foundId}`;
+    } 
+    // 如果有现成的有效链接，直接使用
+    else if (item.url && item.url.includes('/question/')) {
+      url = item.url;
     } else if (target.url && target.url.includes('/question/')) {
       url = target.url;
-    } else if (item.url && item.url.includes('/question/')) {
-      url = item.url;
-    } else if (item.target && item.target.id && String(item.target.id).match(/^\d+$/)) {
-      url = `https://www.zhihu.com/question/${item.target.id}`;
+    }
+
+    // 最后兜底：直接跳转到知乎热榜页面
+    if (!url) {
+      url = 'https://www.zhihu.com/hot';
     }
 
     return {
@@ -234,11 +259,37 @@ function parseZhihuHtml(html) {
 
     const items = hotList.map((item, index) => {
       const target = item.target || item;
+      let url = '';
+      
+      let foundId = null;
+      
+      if (item.question_id && String(item.question_id).match(/^\d+$/)) {
+        foundId = item.question_id;
+      } else if (target.question && target.question.id && String(target.question.id).match(/^\d+$/)) {
+        foundId = target.question.id;
+      } else if (target.id && String(target.id).match(/^\d+$/) && !target.type) {
+        foundId = target.id;
+      } else if (item.target && item.target.id && String(item.target.id).match(/^\d+$/)) {
+        foundId = item.target.id;
+      } else if (item.id && String(item.id).match(/^\d+$/)) {
+        foundId = item.id;
+      }
+
+      if (foundId) {
+        url = `https://www.zhihu.com/question/${foundId}`;
+      } else if (item.url && item.url.includes('/question/')) {
+        url = item.url;
+      } else if (target.url && target.url.includes('/question/')) {
+        url = target.url;
+      } else {
+        url = 'https://www.zhihu.com/hot';
+      }
+
       return {
         rank: item.rank || index + 1,
         title: target.title || item.title || '',
         heat: item.hotScore || 0,
-        url: target.url || `https://www.zhihu.com/question/${target.id}`,
+        url: url,
         platform: 'zhihu',
         isTop: false,
         isNew: false,
@@ -270,11 +321,23 @@ function parseThirdParty(data) {
   return items.map((item, index) => {
     let title = item.title || item.name || '';
     let heat = item.heat || item.hotScore || item.hot_score || 0;
-    let url = item.url || '';
+    let url = '';
     let rank = item.rank || index + 1;
 
-    if (!url && item.question_id) {
-      url = `https://www.zhihu.com/question/${item.question_id}`;
+    let foundId = null;
+    
+    if (item.question_id && String(item.question_id).match(/^\d+$/)) {
+      foundId = item.question_id;
+    } else if (item.id && String(item.id).match(/^\d+$/)) {
+      foundId = item.id;
+    }
+
+    if (foundId) {
+      url = `https://www.zhihu.com/question/${foundId}`;
+    } else if (item.url && item.url.includes('/question/')) {
+      url = item.url;
+    } else {
+      url = 'https://www.zhihu.com/hot';
     }
 
     return {
