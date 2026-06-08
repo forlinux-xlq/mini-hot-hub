@@ -173,7 +173,7 @@ function parseZhihuApi(data) {
 
     let title = '';
     let url = '';
-    let questionId = target.id || item.id;
+    let questionId = null;
 
     if (target.title) {
       title = target.title;
@@ -186,14 +186,18 @@ function parseZhihuApi(data) {
       title = item.name;
     }
 
-    if (questionId) {
-      url = `https://www.zhihu.com/question/${questionId}`;
-    } else if (item.question_id) {
+    if (item.question_id && String(item.question_id).match(/^\d+$/)) {
       url = `https://www.zhihu.com/question/${item.question_id}`;
-    } else if (target.url && !target.url.startsWith('https://api.zhihu.com')) {
+    } else if (questionId && String(questionId).match(/^\d+$/)) {
+      url = `https://www.zhihu.com/question/${questionId}`;
+    } else if (target.question && target.question.id && String(target.question.id).match(/^\d+$/)) {
+      url = `https://www.zhihu.com/question/${target.question.id}`;
+    } else if (target.url && target.url.includes('/question/')) {
       url = target.url;
-    } else if (item.url && !item.url.startsWith('https://api.zhihu.com')) {
+    } else if (item.url && item.url.includes('/question/')) {
       url = item.url;
+    } else if (item.target && item.target.id && String(item.target.id).match(/^\d+$/)) {
+      url = `https://www.zhihu.com/question/${item.target.id}`;
     }
 
     return {
