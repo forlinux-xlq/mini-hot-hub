@@ -187,41 +187,52 @@ function parseZhihuApi(data) {
 
     // 提取链接
     
-    // 优先使用已有的完整链接，但排除搜索链接（搜索链接可能会跳转到空页面）
-    const isValidUrl = (link) => {
-      return link.startsWith('https://') && 
-             !link.startsWith('https://api.zhihu.com') && 
-             !link.includes('/search?');
+    // 处理链接 - 转换API链接为网页链接
+    const processUrl = (link) => {
+      if (!link || !link.startsWith('https://')) return null;
+      // 排除搜索链接
+      if (link.includes('/search?')) return null;
+      // 将API链接转换为网页链接
+      if (link.startsWith('https://api.zhihu.com/questions/')) {
+        const questionId = link.replace('https://api.zhihu.com/questions/', '');
+        return `https://www.zhihu.com/question/${questionId}`;
+      }
+      // 排除其他API链接
+      if (link.startsWith('https://api.zhihu.com')) return null;
+      return link;
     };
     
-    if (item.url && isValidUrl(item.url)) {
-      url = item.url;
-    } else if (target.url && isValidUrl(target.url)) {
-      url = target.url;
+    if (item.url) {
+      const processedUrl = processUrl(item.url);
+      if (processedUrl) url = processedUrl;
+    }
+    if (!url && target.url) {
+      const processedUrl = processUrl(target.url);
+      if (processedUrl) url = processedUrl;
     }
     
     // 如果没有现成链接，尝试提取问题ID构建链接
     if (!url) {
       let foundId = null;
       
-      // 检查 item.question_id (知乎问题ID通常是8-10位数字)
-      if (item.question_id && String(item.question_id).match(/^\d{8,10}$/)) {
+      // 检查 item.question_id (放宽验证规则，允许6-15位数字)
+      if (item.question_id && String(item.question_id).match(/^\d{6,15}$/)) {
         foundId = item.question_id;
       } 
       // 检查 target.question.id
-      else if (target.question && target.question.id && String(target.question.id).match(/^\d{8,10}$/)) {
+      else if (target.question && target.question.id && String(target.question.id).match(/^\d{6,15}$/)) {
         foundId = target.question.id;
       }
       // 检查 item.target.id
-      else if (item.target && item.target.id && String(item.target.id).match(/^\d{8,10}$/)) {
+      else if (item.target && item.target.id && String(item.target.id).match(/^\d{6,15}$/)) {
         foundId = item.target.id;
       }
       // 检查 target.id (只有当类型是问题时)
-      else if (target.id && String(target.id).match(/^\d{8,10}$/) && (target.type === 'question' || !target.type)) {
+      else if (target.id && String(target.id).match(/^\d{6,15}$/) && (target.type === 'question' || !target.type)) {
         foundId = target.id;
       }
       // 检查 item.id
-      else if (item.id && String(item.id).match(/^\d{8,10}$/)) {
+      else if (item.id && String(item.id).match(/^\d{6,15}$/)) {
         foundId = item.id;
       }
 
@@ -238,17 +249,33 @@ function parseZhihuApi(data) {
       }
     }
     
-    // 检查是否是回答类型
+    // 检查是否是回答类型 - 尝试从回答中获取问题ID
     if (!url && (target.type === 'answer' || item.type === 'answer')) {
-      let answerId = target.id || item.id;
-      if (answerId && String(answerId).match(/^\d+$/)) {
-        // 回答需要找到问题ID才能构建正确的URL
-        // 如果找不到问题ID，就跳转到热榜页面
-        url = 'https://www.zhihu.com/hot';
+      let foundId = null;
+      // 尝试从回答中提取问题ID
+      if (target.question && target.question.id && String(target.question.id).match(/^\d{6,15}$/)) {
+        foundId = target.question.id;
+      } else if (item.question && item.question.id && String(item.question.id).match(/^\d{6,15}$/)) {
+        foundId = item.question.id;
+      }
+      
+      if (foundId) {
+        url = `https://www.zhihu.com/question/${foundId}`;
       }
     }
     
-    // 最后兜底：直接跳转到知乎热榜首页，避免搜索链接问题
+    // 尝试从更多字段获取链接
+    if (!url && item.target && item.target.url) {
+      url = item.target.url;
+    }
+    
+    // 最后兜底：使用知乎问答搜索，这样用户可以找到相关问题
+    if (!url && title) {
+      const encodedTitle = encodeURIComponent(title);
+      url = `https://www.zhihu.com/search?q=${encodedTitle}&type=question`;
+    }
+    
+    // 如果还是没有链接，跳转到热榜首页
     if (!url) {
       url = 'https://www.zhihu.com/hot';
     }
@@ -289,32 +316,40 @@ function parseZhihuHtml(html) {
       const target = item.target || item;
       let url = '';
       
-      // 优先使用已有的完整链接，但排除搜索链接
-      const isValidUrl = (link) => {
-        return link.startsWith('https://') && 
-               !link.startsWith('https://api.zhihu.com') && 
-               !link.includes('/search?');
+      // 处理链接 - 转换API链接为网页链接
+      const processUrl = (link) => {
+        if (!link || !link.startsWith('https://')) return null;
+        if (link.includes('/search?')) return null;
+        if (link.startsWith('https://api.zhihu.com/questions/')) {
+          const questionId = link.replace('https://api.zhihu.com/questions/', '');
+          return `https://www.zhihu.com/question/${questionId}`;
+        }
+        if (link.startsWith('https://api.zhihu.com')) return null;
+        return link;
       };
       
-      if (item.url && isValidUrl(item.url)) {
-        url = item.url;
-      } else if (target.url && isValidUrl(target.url)) {
-        url = target.url;
+      if (item.url) {
+        const processedUrl = processUrl(item.url);
+        if (processedUrl) url = processedUrl;
+      }
+      if (!url && target.url) {
+        const processedUrl = processUrl(target.url);
+        if (processedUrl) url = processedUrl;
       }
       
       // 如果没有现成链接，尝试提取问题ID构建链接
       if (!url) {
         let foundId = null;
         
-        if (item.question_id && String(item.question_id).match(/^\d{8,10}$/)) {
+        if (item.question_id && String(item.question_id).match(/^\d{6,15}$/)) {
           foundId = item.question_id;
-        } else if (target.question && target.question.id && String(target.question.id).match(/^\d{8,10}$/)) {
+        } else if (target.question && target.question.id && String(target.question.id).match(/^\d{6,15}$/)) {
           foundId = target.question.id;
-        } else if (item.target && item.target.id && String(item.target.id).match(/^\d{8,10}$/)) {
+        } else if (item.target && item.target.id && String(item.target.id).match(/^\d{6,15}$/)) {
           foundId = item.target.id;
-        } else if (target.id && String(target.id).match(/^\d{8,10}$/) && (target.type === 'question' || !target.type)) {
+        } else if (target.id && String(target.id).match(/^\d{6,15}$/) && (target.type === 'question' || !target.type)) {
           foundId = target.id;
-        } else if (item.id && String(item.id).match(/^\d{8,10}$/)) {
+        } else if (item.id && String(item.id).match(/^\d{6,15}$/)) {
           foundId = item.id;
         }
 
@@ -331,8 +366,26 @@ function parseZhihuHtml(html) {
         }
       }
       
-      // 最后兜底：直接跳转到知乎热榜首页，避免搜索链接问题
-      if (!url) {
+      // 检查是否是回答类型 - 尝试从回答中获取问题ID
+      if (!url && (target.type === 'answer' || item.type === 'answer')) {
+        let foundId = null;
+        if (target.question && target.question.id && String(target.question.id).match(/^\d{6,15}$/)) {
+          foundId = target.question.id;
+        } else if (item.question && item.question.id && String(item.question.id).match(/^\d{6,15}$/)) {
+          foundId = item.question.id;
+        }
+        
+        if (foundId) {
+          url = `https://www.zhihu.com/question/${foundId}`;
+        }
+      }
+      
+      // 最后兜底：使用知乎问答搜索
+      const title = target.title || item.title || '';
+      if (!url && title) {
+        const encodedTitle = encodeURIComponent(title);
+        url = `https://www.zhihu.com/search?q=${encodedTitle}&type=question`;
+      } else if (!url) {
         url = 'https://www.zhihu.com/hot';
       }
 
@@ -375,23 +428,31 @@ function parseThirdParty(data) {
     let url = '';
     let rank = item.rank || index + 1;
 
-    // 优先使用已有的完整链接，但排除搜索链接
-    const isValidUrl = (link) => {
-      return link.startsWith('https://') && 
-             !link.startsWith('https://api.zhihu.com') && 
-             !link.includes('/search?');
+    // 处理链接 - 转换API链接为网页链接
+    const processUrl = (link) => {
+      if (!link || !link.startsWith('https://')) return null;
+      if (link.includes('/search?')) return null;
+      if (link.startsWith('https://api.zhihu.com/questions/')) {
+        const questionId = link.replace('https://api.zhihu.com/questions/', '');
+        return `https://www.zhihu.com/question/${questionId}`;
+      }
+      if (link.startsWith('https://api.zhihu.com')) return null;
+      return link;
     };
     
-    if (item.url && isValidUrl(item.url)) {
-      url = item.url;
+    if (item.url) {
+      const processedUrl = processUrl(item.url);
+      if (processedUrl) url = processedUrl;
     }
     
     // 尝试从 target 对象中提取链接
     if (!url && item.target) {
-      if (item.target.url && isValidUrl(item.target.url)) {
-        url = item.target.url;
-      } else if (item.target.question && item.target.question.url && isValidUrl(item.target.question.url)) {
-        url = item.target.question.url;
+      if (item.target.url) {
+        const processedUrl = processUrl(item.target.url);
+        if (processedUrl) url = processedUrl;
+      } else if (item.target.question && item.target.question.url) {
+        const processedUrl = processUrl(item.target.question.url);
+        if (processedUrl) url = processedUrl;
       }
     }
     
@@ -399,12 +460,15 @@ function parseThirdParty(data) {
     if (!url) {
       let foundId = null;
       
-      if (item.question_id && String(item.question_id).match(/^\d{8,10}$/)) {
+      // 放宽验证规则，允许6-15位数字
+      if (item.question_id && String(item.question_id).match(/^\d{6,15}$/)) {
         foundId = item.question_id;
-      } else if (item.id && String(item.id).match(/^\d{8,10}$/)) {
+      } else if (item.id && String(item.id).match(/^\d{6,15}$/)) {
         foundId = item.id;
-      } else if (item.target && item.target.question && item.target.question.id && String(item.target.question.id).match(/^\d{8,10}$/)) {
+      } else if (item.target && item.target.question && item.target.question.id && String(item.target.question.id).match(/^\d{6,15}$/)) {
         foundId = item.target.question.id;
+      } else if (item.target && item.target.id && String(item.target.id).match(/^\d{6,15}$/)) {
+        foundId = item.target.id;
       }
 
       if (foundId) {
@@ -428,8 +492,25 @@ function parseThirdParty(data) {
       }
     }
     
-    // 最后兜底：直接跳转到知乎热榜首页，避免搜索链接问题
-    if (!url) {
+    // 检查是否是回答类型 - 尝试从回答中获取问题ID
+    if (!url && (item.type === 'answer' || (item.target && item.target.type === 'answer'))) {
+      let foundId = null;
+      if (item.target && item.target.question && item.target.question.id && String(item.target.question.id).match(/^\d{6,15}$/)) {
+        foundId = item.target.question.id;
+      } else if (item.question && item.question.id && String(item.question.id).match(/^\d{6,15}$/)) {
+        foundId = item.question.id;
+      }
+      
+      if (foundId) {
+        url = `https://www.zhihu.com/question/${foundId}`;
+      }
+    }
+    
+    // 最后兜底：使用知乎问答搜索
+    if (!url && title) {
+      const encodedTitle = encodeURIComponent(title);
+      url = `https://www.zhihu.com/search?q=${encodedTitle}&type=question`;
+    } else if (!url) {
       url = 'https://www.zhihu.com/hot';
     }
 
